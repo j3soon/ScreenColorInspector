@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Windows.Forms;
 using LowLevelControls.Natives;
 using Microsoft.Win32;
@@ -152,7 +153,7 @@ namespace ScreenColorInspector
             //Fit the preview box in screen.
             if (mState.X + rect.Width + delta >= Window.ClientBounds.Width)
                 rect.X = mState.X - rect.Width - delta;
-            if (mState.Y + rect.Height + delta >= Window.ClientBounds.Width)
+            if (mState.Y + rect.Height + delta >= Window.ClientBounds.Height)
                 rect.Y = mState.Y - rect.Height - delta;
             spriteBatch.Begin();
             //Border.
