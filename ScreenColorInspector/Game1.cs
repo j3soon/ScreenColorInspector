@@ -167,8 +167,16 @@ namespace ScreenColorInspector
         Color GetColorAt(int x, int y)
         {
             System.Drawing.Rectangle bounds = new System.Drawing.Rectangle(x, y, 1, 1);
-            using (Graphics g = Graphics.FromImage(bmp))
-                g.CopyFromScreen(bounds.Location, System.Drawing.Point.Empty, bounds.Size);
+            try
+            {
+                using (Graphics g = Graphics.FromImage(bmp))
+                    g.CopyFromScreen(bounds.Location, System.Drawing.Point.Empty, bounds.Size);
+            }
+            catch (Win32Exception e)
+            {
+                // Occurs when administrator privilege requesting window pops out.
+                return Color.Transparent;
+            }
             System.Drawing.Color color = bmp.GetPixel(0, 0);
             return new Color(new Vector4(color.R, color.G, color.B, color.A) / 255.0f);
         }
