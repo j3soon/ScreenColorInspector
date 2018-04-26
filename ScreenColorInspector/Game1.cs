@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
@@ -23,25 +24,21 @@ namespace ScreenColorInspector
     /// <summary>
     /// This is the main type for your game.
     /// </summary>
-    public class Game1 : OverlayGame
+    public class Game1 : FullScreenOverlayGame
     {
-        GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
         Texture2D pixel;
         llc.MouseHook mHook;
+
         const int viewSize = 50;
         const int viewBorder = 2;
         const int delta = 10;
+        MouseState mState;
+        Color color, colorInv;
+        Rectangle rView, rLeft, rRight, rTop, rBottom;
 
-        public Game1()
+        public Game1() : base()
         {
-            graphics = new GraphicsDeviceManager(this);
-            Content.RootDirectory = "Content";
-            graphics.PreferredBackBufferWidth = GetScreenBounds().Width;
-            graphics.PreferredBackBufferHeight = GetScreenBounds().Height;
-            graphics.ApplyChanges();
-            SystemEvents.DisplaySettingsChanged += SystemEvents_DisplaySettingsChanged;
-
             mHook = new llc.MouseHook();
             mHook.MouseDownEvent += mHook_MouseDownEvent;
             mHook.InstallGlobalHook();
@@ -70,13 +67,6 @@ namespace ScreenColorInspector
             }
             return false;
         }*/
-
-        private void SystemEvents_DisplaySettingsChanged(object sender, System.EventArgs e)
-        {
-            graphics.PreferredBackBufferWidth = GetScreenBounds().Width;
-            graphics.PreferredBackBufferHeight = GetScreenBounds().Height;
-            graphics.ApplyChanges();
-        }
 
         /// <summary>
         /// Allows the game to perform any initialization it needs to before starting to run.
@@ -131,7 +121,6 @@ namespace ScreenColorInspector
                 Exit();
 
             // TODO: Add your update logic here
-
             base.Update(gameTime);
         }
 
@@ -144,46 +133,48 @@ namespace ScreenColorInspector
             GraphicsDevice.Clear(Color.Transparent);
 
             // TODO: Add your drawing code here
+
             //Get the pixel under current cursor.
-            MouseState mState = Mouse.GetState();
-            Color color = GetColorAt(mState.X, mState.Y);
-            Color colorInv = new Color(255 - color.R, 255 - color.G, 255 - color.B, color.A);
-            Rectangle rect = new Rectangle(mState.X + delta, mState.Y + delta, viewSize, viewSize);
-            Rectangle r;
+            mState = Mouse.GetState();
+            color = GetColorAt(mState.X, mState.Y);
+            colorInv = new Color(255 - color.R, 255 - color.G, 255 - color.B, color.A);
+            rView = new Rectangle(mState.X + delta, mState.Y + delta, viewSize, viewSize);
             //Fit the preview box in screen.
-            if (mState.X + rect.Width + delta >= Window.ClientBounds.Width)
-                rect.X = mState.X - rect.Width - delta;
-            if (mState.Y + rect.Height + delta >= Window.ClientBounds.Height)
-                rect.Y = mState.Y - rect.Height - delta;
+            if (mState.X + rView.Width + delta >= Window.ClientBounds.Width)
+                rView.X = mState.X - rView.Width - delta;
+            if (mState.Y + rView.Height + delta >= Window.ClientBounds.Height)
+                rView.Y = mState.Y - rView.Height - delta;
+            //Get border rect.
+            rLeft = new Rectangle(rView.X - viewBorder, rView.Y - viewBorder, viewBorder, rView.Height + 2 * viewBorder);
+            rTop = new Rectangle(rView.X - viewBorder, rView.Y - viewBorder, rView.Width + 2 * viewBorder, viewBorder);
+            rRight = new Rectangle(rView.Right, rView.Y - viewBorder, viewBorder, rView.Height + 2 * viewBorder);
+            rBottom = new Rectangle(rView.X - viewBorder, rView.Bottom, rView.Height + 2 * viewBorder, viewBorder);
+
             spriteBatch.Begin();
             //Border.
-            r = new Rectangle(rect.X - viewBorder, rect.Y - viewBorder, rect.Width + 2 * viewBorder, viewBorder);
-            spriteBatch.Draw(pixel, r, colorInv);
-            r = new Rectangle(rect.X - viewBorder, rect.Y - viewBorder, viewBorder, rect.Height + 2 * viewBorder);
-            spriteBatch.Draw(pixel, r, colorInv);
-            r = new Rectangle(rect.X - viewBorder, rect.Bottom, rect.Height + 2 * viewBorder, viewBorder);
-            spriteBatch.Draw(pixel, r, colorInv);
-            r = new Rectangle(rect.Right, rect.Y - viewBorder, viewBorder, rect.Height + 2 * viewBorder);
-            spriteBatch.Draw(pixel, r, colorInv);
+            spriteBatch.Draw(pixel, rLeft, colorInv);
+            spriteBatch.Draw(pixel, rTop, colorInv);
+            spriteBatch.Draw(pixel, rRight, colorInv);
+            spriteBatch.Draw(pixel, rBottom, colorInv);
             //Fill.
-            spriteBatch.Draw(pixel, rect, color);
+            spriteBatch.Draw(pixel, rView, color);
             spriteBatch.End();
 
             base.Draw(gameTime);
         }
 
-        Bitmap bmp = new Bitmap(4, 4);
+        Bitmap bmp = new Bitmap(1, 1);
         Color GetColorAt(int x, int y)
         {
-            System.Drawing.Rectangle bounds = new System.Drawing.Rectangle(x, y, 4, 4);
+            System.Drawing.Rectangle bounds = new System.Drawing.Rectangle(x, y, 1, 1);
             using (Graphics g = Graphics.FromImage(bmp))
                 g.CopyFromScreen(bounds.Location, System.Drawing.Point.Empty, bounds.Size);
             System.Drawing.Color color = bmp.GetPixel(0, 0);
             return new Color(new Vector4(color.R, color.G, color.B, color.A) / 255.0f);
         }
 
-        /*[DllImport("gdi32.dll", CharSet = CharSet.Auto, SetLastError = true, ExactSpelling = true)]
-        static extern int BitBlt(IntPtr hDC, int x, int y, int nWidth, int nHeight, IntPtr hSrcDC, int xSrc, int ySrc, int dwRop);
+        /*[DllImport("gdi32.dll", SetLastError = true)]
+        static extern int BitBlt(IntPtr hdcDest, int nXDest, int nYDest, int nWidth, int nHeight, IntPtr hdcSrc, int nXSrc, int nySrc, int dwRop);
 
         Bitmap screenPixel = new Bitmap(1, 1, PixelFormat.Format32bppArgb);
         Color GetColorAt(int x, int y)
@@ -194,7 +185,7 @@ namespace ScreenColorInspector
                 {
                     IntPtr hSrcDC = gsrc.GetHdc();
                     IntPtr hDC = gdest.GetHdc();
-                    int ret = BitBlt(hSrcDC, 0, 0, 1, 1, hDC, x, y, (int)CopyPixelOperation.SourceCopy);
+                    int ret = BitBlt(hDC, 0, 0, 1, 1, hSrcDC, x, y, (int)CopyPixelOperation.SourceCopy);
                     if (ret == 0)
                         throw new Win32Exception(Marshal.GetLastWin32Error());
                     gdest.ReleaseHdc();
