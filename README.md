@@ -17,3 +17,11 @@ Tool for quickly copy the color HEX code where the cursor is pointing.
 4. Press ESC to exit.
 
 5. If the preview window disappears, press ESC and try to open `ScreenColorInspector.exe` again.
+
+## Blocked by Windows SmartScreen
+
+![blocked](/docs/images/blocked.png)
+
+Click `More info` and then click `Run anyway`.
+
+![run-anyway](/docs/images/run-anyway.png)
