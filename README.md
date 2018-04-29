@@ -2,6 +2,8 @@
 
 Tool for quickly copy the color HEX code where the cursor is pointing.
 
+Download link: [ScreenColorInspector v0.1.1](https://github.com/j3soon/ScreenColorInspector/releases/download/v0.1.1/ScreenColorInspector.zip)
+
 ## Screenshots
 
 ![preview](/docs/images/preview.png)
