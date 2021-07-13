@@ -27,3 +27,7 @@ Download link: [ScreenColorInspector v0.1.1](https://github.com/j3soon/ScreenCol
 Click `More info` and then click `Run anyway`.
 
 ![run-anyway](/docs/images/run-anyway.png)
+
+## Related Tools
+
+- [Color Picker in PowerToys](https://docs.microsoft.com/en-us/windows/powertoys/color-picker)
